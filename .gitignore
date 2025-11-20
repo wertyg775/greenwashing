@@ -1,0 +1,10 @@
+.DS_Store
+
+bert_test.py
+label_check.ipynb
+amazon_products.csv
+
+#Ignore model file
+models/
+results/
+
