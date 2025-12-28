@@ -27,7 +27,7 @@ _, val_texts, _, val_labels = train_test_split(
 label_map = {'SPECIFIC': 1, 'VAGUE': 0}
 val_labels_num = [label_map[l] for l in val_labels]
 
-val_encodings = tokenizer(val_texts, truncation=True, padding=True, max_length=128)
+val_encodings = tokenizer(val_texts, truncation=True, padding=True, max_length=256)
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, encodings, labels):
