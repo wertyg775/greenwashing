@@ -48,8 +48,8 @@ print(f"Training: {len(train_texts)}, Validation: {len(val_texts)}")
 print("\nTokenizing...")
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-train_encodings = tokenizer(train_texts, truncation=True, padding=True, max_length=128)
-val_encodings = tokenizer(val_texts, truncation=True, padding=True, max_length=128)
+train_encodings = tokenizer(train_texts, truncation=True, padding=True, max_length=256)
+val_encodings = tokenizer(val_texts, truncation=True, padding=True, max_length=256)
 
 # 4. Create datasets
 class Dataset(torch.utils.data.Dataset):
@@ -75,7 +75,7 @@ model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_l
 # 6. Training args (optimized for M1)
 training_args = TrainingArguments(
     output_dir='./results',
-    num_train_epochs=3,
+    num_train_epochs=5,
     per_device_train_batch_size=16,  # Good for M1
     per_device_eval_batch_size=32,
     warmup_steps=500,
