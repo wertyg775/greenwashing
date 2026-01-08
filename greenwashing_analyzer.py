@@ -54,7 +54,8 @@ class GreenwashingAnalyzer:
             probs = torch.softmax(outputs.logits, dim=1)
 
         specific_probs = probs[:, 1]  # label 0 = VAGUE
-        return specific_probs.mean().item()
+        percentile_75 = torch.quantile(specific_probs, 0.75).item()
+        return percentile_75
 
     # ---------- Sentiment ----------
     def analyze_sentiment(self, text):
