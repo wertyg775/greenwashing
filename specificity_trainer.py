@@ -1,9 +1,8 @@
-# greenwashing_bert_trainer.py
+# specificity_trainer.py
 
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ['TRANSFORMERS_NO_TF'] = '1'
-
 
 import pandas as pd
 import torch
@@ -11,7 +10,9 @@ from transformers import BertTokenizer, BertForSequenceClassification, Trainer, 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
-# Check device (should use MPS on M1)
+# =========================================================
+# 1. DEVICE SETUP
+# =========================================================
 if torch.backends.mps.is_available():
     device = torch.device("mps")
     print("✓ Using Apple Silicon GPU (MPS)")
@@ -22,79 +23,124 @@ else:
     device = torch.device("cpu")
     print("⚠️ Using CPU (slower)")
 
-# 1. Load data
-print("\nLoading data...")
-df = pd.read_csv('data/training_data.csv')
-df = df.rename(columns={'combined_text' : 'text'})
-print(f"Total: {len(df)} examples")
-print(df['label'].value_counts())
+# =========================================================
+# 2. LOAD DATA
+# =========================================================
+print("\nLoading sentence-level data...")
+df = pd.read_csv("data/training_sentences.csv")
+df = df.rename(columns={"sentence": "text"})
 
-# 2. Split
+print(f"Total samples: {len(df)}")
+print("Label distribution:")
+print(df["label_id"].value_counts())
+
+# =========================================================
+# 3. TRAIN / VAL SPLIT (sentence-level)
+# =========================================================
 train_texts, val_texts, train_labels, val_labels = train_test_split(
-    df['text'].tolist(),
-    df['label'].tolist(),
+    df["text"].tolist(),
+    df["label_id"].tolist(),
     test_size=0.2,
     random_state=42,
-    stratify=df['label']
+    stratify=df["label_id"]
 )
 
-label_map = {'SPECIFIC': 1, 'VAGUE': 0}
-train_labels_num = [label_map[l] for l in train_labels]
-val_labels_num = [label_map[l] for l in val_labels]
+print(f"Training samples: {len(train_texts)}")
+print(f"Validation samples: {len(val_texts)}")
 
-print(f"Training: {len(train_texts)}, Validation: {len(val_texts)}")
+# =========================================================
+# 4. TOKENIZATION
+# =========================================================
+print("\nTokenizing text...")
+tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 
-# 3. Tokenize
-print("\nTokenizing...")
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+train_encodings = tokenizer(
+    train_texts,
+    truncation=True,
+    padding=True,
+    max_length=128
+)
 
-train_encodings = tokenizer(train_texts, truncation=True, padding=True, max_length=256)
-val_encodings = tokenizer(val_texts, truncation=True, padding=True, max_length=256)
+val_encodings = tokenizer(
+    val_texts,
+    truncation=True,
+    padding=True,
+    max_length=128
+)
 
-# 4. Create datasets
-class Dataset(torch.utils.data.Dataset):
+# =========================================================
+# 5. DATASET CLASS
+# =========================================================
+class SentenceDataset(torch.utils.data.Dataset):
     def __init__(self, encodings, labels):
         self.encodings = encodings
         self.labels = labels
-    
+
     def __len__(self):
         return len(self.labels)
-    
+
     def __getitem__(self, idx):
-        item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
-        item['labels'] = torch.tensor(self.labels[idx])
+        item = {k: torch.tensor(v[idx]) for k, v in self.encodings.items()}
+        item["labels"] = torch.tensor(self.labels[idx])
         return item
 
-train_dataset = Dataset(train_encodings, train_labels_num)
-val_dataset = Dataset(val_encodings, val_labels_num)
+train_dataset = SentenceDataset(train_encodings, train_labels)
+val_dataset = SentenceDataset(val_encodings, val_labels)
 
-# 5. Load model
+# =========================================================
+# 6. LOAD MODEL
+# =========================================================
 print("\nLoading BERT model...")
-model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=2)
-
-# 6. Training args (optimized for M1)
-training_args = TrainingArguments(
-    output_dir='./results',
-    num_train_epochs=5,
-    per_device_train_batch_size=16,  # Good for M1
-    per_device_eval_batch_size=32,
-    warmup_steps=500,
-    weight_decay=0.01,
-    logging_steps=100,
-    eval_strategy="epoch",
-    save_strategy="epoch",
-    load_best_model_at_end=True,
-    use_mps_device=True,  # Enable M1 GPU
+model = BertForSequenceClassification.from_pretrained(
+    "bert-base-uncased",
+    num_labels=2,
+    id2label={0: "VAGUE", 1: "SPECIFIC"},
+    label2id={"VAGUE": 0, "SPECIFIC": 1}
 )
 
+# =========================================================
+# 7. TRAINING ARGUMENTS
+# =========================================================
+training_args = TrainingArguments(
+    output_dir="./results",
+    num_train_epochs=3,
+    per_device_train_batch_size=16,
+    per_device_eval_batch_size=32,
+    warmup_steps=200,
+    weight_decay=0.01,
+    logging_steps=100,
+
+    eval_strategy="epoch",   # must set for load_best_model_at_end
+    save_strategy="epoch",         # must match evaluation_strategy
+    load_best_model_at_end=True,   # will work now
+    metric_for_best_model="f1_macro",
+    greater_is_better=True,
+
+    use_mps_device=True,           # Apple M1 GPU
+)
+
+# =========================================================
+# 8. METRICS
+# =========================================================
 def compute_metrics(pred):
     labels = pred.label_ids
     preds = pred.predictions.argmax(-1)
-    precision, recall, f1, _ = precision_recall_fscore_support(labels, preds, average='weighted')
-    acc = accuracy_score(labels, preds)
-    return {'accuracy': acc, 'f1': f1, 'precision': precision, 'recall': recall}
 
-# 7. Train
+    precision, recall, f1, _ = precision_recall_fscore_support(
+        labels, preds, average="macro"
+    )
+    acc = accuracy_score(labels, preds)
+
+    return {
+        "accuracy": acc,
+        "f1_macro": f1,
+        "precision_macro": precision,
+        "recall_macro": recall
+    }
+
+# =========================================================
+# 9. TRAIN
+# =========================================================
 trainer = Trainer(
     model=model,
     args=training_args,
@@ -105,26 +151,30 @@ trainer = Trainer(
 
 print("\n" + "="*60)
 print("🚀 TRAINING STARTED")
-print("="*60)
-print("Expected time on M1: ~10-15 minutes")
+print("Expected time on M1: ~8–12 minutes")
 print("="*60 + "\n")
 
 trainer.train()
 
-# 8. Evaluate
+# =========================================================
+# 10. FINAL EVALUATION
+# =========================================================
 print("\n" + "="*60)
 print("📊 FINAL EVALUATION")
 print("="*60)
+
 eval_results = trainer.evaluate()
-print(f"\nValidation Accuracy: {eval_results['eval_accuracy']:.2%}")
-print(f"Validation F1 Score: {eval_results['eval_f1']:.2%}")
+print(f"Accuracy:  {eval_results['eval_accuracy']:.2%}")
+print(f"F1 (macro): {eval_results['eval_f1_macro']:.2%}")
+print(f"Precision: {eval_results['eval_precision_macro']:.2%}")
+print(f"Recall:    {eval_results['eval_recall_macro']:.2%}")
 
-# 9. Save
-os.makedirs('./models/specificity', exist_ok=True)
+# =========================================================
+# 11. SAVE MODEL
+# =========================================================
+os.makedirs("./models/specificity", exist_ok=True)
 
+model.save_pretrained("./models/specificity")
+tokenizer.save_pretrained("./models/specificity")
 
-
-model.save_pretrained('./models/specificity')
-tokenizer.save_pretrained('./models/specificity')
-print("\n✓ Model saved to './models/specificity'")
-
+print("\n✓ Model saved to ./models/specificity")
