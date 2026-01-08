@@ -1,5 +1,8 @@
 .DS_Store
 __pycache__
+.env 
+.ipynb_checkpoints
+data/.ipynb_checkpoints
 
 bert_test.py
 label_check.ipynb
