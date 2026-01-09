@@ -1,0 +1,21 @@
+name: Sync to Hugging Face
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Allows you to run this manually from the Actions tab
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true # Crucial: This ensures your 417MB model is pulled correctly
+
+      - name: Push to hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        # Replace YOUR_SPACE_NAME with your actual space name
+        run: git push --force https://wertyg775:$HF_TOKEN@huggingface.co/spaces/wertyg775/greenwashing main
