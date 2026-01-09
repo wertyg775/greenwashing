@@ -135,7 +135,7 @@ class GreenwashingAnalyzer:
 
         risk_score = min(max(risk_score, 0.0), 1.0)
 
-        label = "greenwashing" if risk_score >= 0.4 else "not_greenwashing"
+        label = "greenwashing" if risk_score >= 0.5 else "not_greenwashing"
 
         return {
             "risk_score": round(risk_score, 3),
