@@ -6,7 +6,7 @@ from transformers import BertTokenizer, BertForSequenceClassification, pipeline
 
 class GreenwashingAnalyzer:
     def __init__(self, specificity_model_path):
-        self.device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # Load specificity model
         self.tokenizer = BertTokenizer.from_pretrained(specificity_model_path)
