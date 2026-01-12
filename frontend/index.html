@@ -10,59 +10,71 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #10b981, #059669);
-            min-height: 100vh;
-            padding: 2rem;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9fafb; min-height: 100vh; padding: 2rem; }
+        .container { max-width: 850px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        
+        /* Main Tabs */
+        .tabs { display: flex; background: #f3f4f6; border-bottom: 2px solid #e5e7eb; }
+        .tab { flex: 1; padding: 1rem; background: none; border: none; font-size: 1rem; font-weight: 600; color: #6b7280; cursor: pointer; transition: 0.3s; position: relative; }
+        .tab.active { color: #10b981; background: white; }
+        .tab.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 2px; background: #10b981; }
 
-        .container {
-            max-width: 700px;
-            margin: auto;
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
+        /* Sub-navigation for Insights */
+        .sub-nav { display: flex; gap: 10px; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #f3f4f6; }
+        .sub-nav-btn { padding: 0.5rem 1.25rem; border-radius: 20px; border: 1px solid #e5e7eb; background: white; color: #6b7280; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .sub-nav-btn.active { background: #10b981; color: white; border-color: #10b981; }
+        .sub-nav-btn:hover:not(.active) { background: #f9fafb; border-color: #d1d5db; }
 
-        textarea {
-            width: 100%;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            font-size: 1rem;
-        }
+        /* Comparison Toggle Buttons */
+        .prompt-selector { display: flex; gap: 8px; margin-bottom: 1.5rem; justify-content: center; }
+        .prompt-btn { padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid #d1d5db; background: #f9fafb; color: #4b5563; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .prompt-btn.active { background: #374151; color: white; border-color: #374151; }
 
-        button {
-            width: 100%;
-            padding: 1rem;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            cursor: pointer;
-        }
+        .content { padding: 2.5rem; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .score-card {
-            margin-top: 2rem;
-            padding: 1.5rem;
-            border-left: 5px solid;
-            background: #f9fafb;
-        }
+        h1 { color: #111827; margin-bottom: 0.5rem; font-size: 1.875rem; }
+        h2 { color: #374151; margin-top: 2rem; margin-bottom: 1rem; font-size: 1.5rem; }
+        h3 { color: #111827; margin-top: 1.5rem; margin-bottom: 0.75rem; font-size: 1.25rem; }
+        p { color: #4b5563; line-height: 1.6; margin-bottom: 1rem; }
+        .subtitle { color: #6b7280; font-size: 1rem; margin-bottom: 1.5rem; }
 
-        .badge {
-            padding: 0.4rem 1rem;
-            border-radius: 20px;
-            color: white;
-            font-weight: 600;
-        }
+        /* Product UI Elements */
+        textarea { width: 100%; padding: 1rem; margin-bottom: 1rem; font-size: 1rem; border: 2px solid #e5e7eb; border-radius: 8px; resize: vertical; }
+        button.analyze-btn { width: 100%; padding: 1rem; background: #667eea; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        button.analyze-btn:hover:not(:disabled) { background: #5568d3; transform: translateY(-2px); }
 
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 0.5rem;
-        }
+        .score-card { margin-top: 2rem; padding: 1.5rem; border-left: 5px solid; background: #f9fafb; border-radius: 8px; }
+        .badge { display: inline-block; padding: 0.4rem 1rem; border-radius: 20px; color: white; font-weight: 600; margin-bottom: 1rem; }
+        .detail-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #e5e7eb; }
+        
+        .table-container { overflow-x: auto; margin-top: 2.5rem; }
+        .history-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        .history-table th, .history-table td { padding: 0.75rem; border: 1px solid #e5e7eb; text-align: left; }
+
+        /* Linguistic Chart Elements */
+        .diverging-container { margin-top: 2rem; padding: 1.5rem; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; }
+        .diverging-row { display: flex; align-items: center; margin-bottom: 1.2rem; }
+        .pattern-name { width: 180px; font-size: 0.85rem; font-weight: 600; color: #374151; text-align: right; padding-right: 15px; }
+        .chart-area { flex: 1; height: 32px; position: relative; background: #f3f4f6; border-radius: 4px; }
+        .center-axis { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: #1f2937; z-index: 5; }
+        .bar { position: absolute; top: 4px; bottom: 4px; border-radius: 2px; transition: 0.8s; display: flex; align-items: center; padding: 0 8px; font-size: 0.75rem; font-weight: bold; color: black; }
+        .bar-specific { left: 50%; background: #10b981; justify-content: flex-start; }
+        .bar-vague { right: 50%; background: #ef4444; justify-content: flex-end; }
+        .axis-labels { display: flex; justify-content: space-between; margin-left: 180px; margin-top: 0.5rem; font-size: 0.75rem; color: #9ca3af; font-weight: bold; }
+
+        /* Interpretation & Comparison UI */
+        .cm-display-box { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; text-align: center; margin-top: 1rem; }
+        .cm-image { max-width: 100%; height: auto; border-radius: 8px; border: 1px solid #f3f4f6; }
+        
+        .interpretation-section { margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #e5e7eb; }
+        .insight-card { padding: 1.25rem; border-radius: 8px; font-size: 0.9rem; border-left: 4px solid; margin-bottom: 1rem; }
+        .insight-card.determiner { background: #f0fdf4; border-color: #10b981; }
+        .insight-card.irrelevant { background: #f9fafb; border-color: #d1d5db; }
+        .insight-card h4 { margin-bottom: 0.4rem; color: #111827; }
+
+        .info-box { background: #ecfdf5; border-left: 4px solid #10b981; padding: 1rem; margin: 1.5rem 0; border-radius: 4px; }
     </style>
 </head>
 
@@ -73,88 +85,210 @@
 const { useState } = React;
 
 function App() {
+    const [activeTab, setActiveTab] = useState('product');
+    const [insightView, setInsightView] = useState('linguistic'); 
+    const [promptType, setPromptType] = useState('zero-shot'); // For Comparison images
+    
     const [text, setText] = useState("");
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [history, setHistory] = useState([]);
 
-    const API_BASE = ""; // CHANGE to Cloud Run URL later
+    const API_BASE = ""; 
 
     const analyze = async () => {
         if (!text.trim()) return;
         setLoading(true);
-
         try {
             const res = await fetch(`${API_BASE}/api/analyze_additive`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ text })
             });
-
             const data = await res.json();
             setResult(data);
-        } catch (err) {
-            alert("Backend not reachable");
-        }
-
+            setHistory(prev => [{ id: Date.now(), text, result: data, timestamp: new Date().toLocaleString() }, ...prev]);
+        } catch (err) { alert("Backend not reachable"); }
         setLoading(false);
     };
 
-    const riskLevel = (score) => {
-        if (score >= 0.6) return "HIGH";
-        if (score >= 0.4) return "MEDIUM";
-        return "LOW";
-    };
+    const riskLevel = (score) => score >= 0.6 ? "HIGH" : score >= 0.4 ? "MEDIUM" : "LOW";
+    const riskColor = (level) => level === "HIGH" ? "#ef4444" : level === "MEDIUM" ? "#f59e0b" : "#10b981";
 
-    const riskColor = (level) => {
-        if (level === "HIGH") return "#ef4444";
-        if (level === "MEDIUM") return "#f59e0b";
-        return "#10b981";
-    };
+    const linguisticData = [
+        { name: "Certification", diff: 9.5 },
+        { name: "Process Transparency", diff: 4.1 },
+        { name: "Quantification", diff: 2.5 },
+        { name: "Carbon Metrics", diff: 0.9 },
+        { name: "Hedging Language", diff: -0.3 },
+        { name: "Emotional Language", diff: -0.8 },
+        { name: "Vague Buzzwords", diff: -60.0 }
+    ];
 
     return (
         <div className="container">
-            <h1>Greenwashing Detection System</h1>
-            <p>Composite Additive Risk Model</p>
+            {/* Main Tabs */}
+            <div className="tabs">
+                {['product', 'insights', 'about'].map(t => (
+                    <button key={t} className={`tab ${activeTab === t ? 'active' : ''}`} onClick={() => setActiveTab(t)}>
+                        {t.charAt(0).toUpperCase() + t.slice(1)}
+                    </button>
+                ))}
+            </div>
 
-            <textarea
-                rows="4"
-                placeholder="Enter environmental marketing claim..."
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-            />
+            {/* PRODUCT TAB */}
+            {activeTab === 'product' && (
+                <div className="content">
+                    <h1>Greenwashing Detection</h1>
+                    <p className="subtitle">Evaluate environmental marketing claims for greenwashing risk.</p>
+                    <textarea 
+                        rows="4" 
+                        placeholder="Enter environmental marketing claim (e.g., '100% natural and eco-friendly packaging')..." 
+                        value={text} 
+                        onChange={(e) => setText(e.target.value)} 
+                    />
+                    <button className="analyze-btn" onClick={analyze} disabled={loading}>
+                        {loading ? "Analyzing..." : "Analyze Claim"}
+                    </button>
 
-            <button onClick={analyze} disabled={loading}>
-                {loading ? "Analyzing..." : "Analyze Claim"}
-            </button>
+                    {result && (
+                        <div className="score-card" style={{ borderColor: riskColor(riskLevel(result.risk_score)) }}>
+                            <h2>Risk Score: {result.risk_score}</h2>
+                            <span className="badge" style={{ background: riskColor(riskLevel(result.risk_score)) }}>{riskLevel(result.risk_score)} RISK</span>
+                            <div className="detail-row"><span>Label:</span><strong>{result.label}</strong></div>
+                            <div className="detail-row"><span>Specificity:</span><strong>{result.specificity}</strong></div>
+                            <div className="detail-row"><span>Buzzword Weight:</span><strong>{result.buzzword_weight}</strong></div>
+                        </div>
+                    )}
 
-            {result && (() => {
-                const level = riskLevel(result.risk_score);
-                return (
-                    <div className="score-card" style={{ borderColor: riskColor(level) }}>
-                        <h2>Risk Score: {result.risk_score}</h2>
-                        <span className="badge" style={{ background: riskColor(level) }}>
-                            {level} RISK
-                        </span>
-
-                        <div className="detail-row">
-                            <span>Label:</span>
-                            <strong>{result.label}</strong>
-                        </div>
-                        <div className="detail-row">
-                            <span>Specificity:</span>
-                            <strong>{result.specificity}</strong>
-                        </div>
-                        <div className="detail-row">
-                            <span>Sentiment:</span>
-                            <strong>{result.sentiment}</strong>
-                        </div>
-                        <div className="detail-row">
-                            <span>Buzzword Weight:</span>
-                            <strong>{result.buzzword_weight}</strong>
-                        </div>
+                    <div className="table-container">
+                        <h2>Recent History</h2>
+                        <table className="history-table">
+                            <thead><tr><th>Claim Text</th><th>Score</th><th>Level</th></tr></thead>
+                            <tbody>
+                                {history.length > 0 ? history.map(h => (
+                                    <tr key={h.id}>
+                                        <td>{h.text}</td>
+                                        <td>{h.result.risk_score}</td>
+                                        <td><span style={{color: riskColor(riskLevel(h.result.risk_score)), fontWeight:'bold'}}>{riskLevel(h.result.risk_score)}</span></td>
+                                    </tr>
+                                )) : (
+                                    <tr><td colSpan="3" style={{textAlign:'center', color:'#9ca3af', padding:'2rem'}}>No claims analyzed yet.</td></tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
-                );
-            })()}
+                </div>
+            )}
+
+            {/* INSIGHTS TAB */}
+            {activeTab === 'insights' && (
+                <div className="content">
+                    <div className="sub-nav">
+                        <button 
+                            className={`sub-nav-btn ${insightView === 'linguistic' ? 'active' : ''}`}
+                            onClick={() => setInsightView('linguistic')}
+                        >
+                            Linguistic Analysis
+                        </button>
+                        <button 
+                            className={`sub-nav-btn ${insightView === 'comparison' ? 'active' : ''}`}
+                            onClick={() => setInsightView('comparison')}
+                        >
+                            Comparison
+                        </button>
+                    </div>
+
+                    {insightView === 'linguistic' ? (
+                        <React.Fragment>
+                            <h1>Linguistic Analysis</h1>
+                            <p className="subtitle">Statistical correlation between patterns and claim categories.</p>
+                            
+                            <div className="diverging-container">
+                                {linguisticData.map(p => (
+                                    <div className="diverging-row" key={p.name}>
+                                        <div className="pattern-name">{p.name}</div>
+                                        <div className="chart-area">
+                                            <div className="center-axis"></div>
+                                            <div className={`bar ${p.diff > 0 ? 'bar-specific' : 'bar-vague'}`} style={{ width: `${Math.abs(p.diff / 65) * 50}%` }}>
+                                                {Math.abs(p.diff)}%
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                <div className="axis-labels"><span>← More Vague</span><span>0 (Neutral)</span><span>More Specific →</span></div>
+                            </div>
+
+                            <div className="interpretation-section">
+                                <h3>Key Determiners</h3>
+                                <div className="insight-card determiner">
+                                    <h4>Biggest Red Flag: Vague Buzzwords (-60.0%)</h4>
+                                    <p>Generic terms like "sustainable" and "eco-friendly" are the primary indicators of a vague claim. Their overwhelming presence confirms buzzwords are used as a substitute for factual evidence.</p>
+                                </div>
+                                <div className="insight-card determiner">
+                                    <h4>Strongest Credibility Marker: Certification (+9.5%)</h4>
+                                    <p>Third-party certifications (FSC, GOTS, USDA) are the most reliable indicators of a specific, verified claim.</p>
+                                </div>
+                                <h3>Statistically Irrelevant</h3>
+                                <div className="insight-card irrelevant">
+                                    <h4>Hedging and Emotional Language (±0.8%)</h4>
+                                    <p>Patterns like "aims to" or "care for" show almost zero statistical difference, as they are used universally across all marketing types.</p>
+                                </div>
+                            </div>
+                        </React.Fragment>
+                    ) : (
+                        <React.Fragment>
+                            <h1>LLM Prompted Benchmark Comparison</h1>
+                            <p className="subtitle">Performance analysis of different prompt strategies on the SAGE dataset.</p>
+                            
+                            <div className="prompt-selector">
+                                {['zero-shot', 'one-shot', 'chain-of-thought'].map(p => (
+                                    <button 
+                                        key={p} 
+                                        className={`prompt-btn ${promptType === p ? 'active' : ''}`}
+                                        onClick={() => setPromptType(p)}
+                                    >
+                                        {p.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="cm-display-box">
+                                <h3>{promptType.toUpperCase().replace(/-/g, ' ')} Confusion Matrix</h3>
+                                <div style={{margin: '1.5rem 0'}}>
+                                    <img 
+                                        className="cm-image" 
+                                        src={`/image/comparison/${promptType}_cm.png`} 
+                                        alt={`${promptType} Confusion Matrix`}
+                                        onError={(e) => { e.target.src = "https://via.placeholder.com/600x400?text=Confusion+Matrix+Not+Found"; }}
+                                    />
+                                </div>
+                                <p style={{fontSize: '0.85rem', color: '#6b7280'}}>
+                                    Analysis of Predicted vs. Actual labels using the <strong>{promptType}</strong> approach.
+                                </p>
+                            </div>
+                        </React.Fragment>
+                    )}
+                </div>
+            )}
+
+            {/* ABOUT TAB */}
+            {activeTab === 'about' && (
+                <div className="content">
+                    <h1>What is Greenwashing?</h1>
+                    <div className="info-box">
+                        <p>Greenwashing is the practice of using deceptive or unverified claims to project a false image of environmental responsibility, a tactic now found in over 50% of e-commerce sustainability labels.</p>
+                    </div>
+
+                    <h2>About SAGE Framework</h2>
+                    <p>This tool uses the SAGE framework to combat "eco-noise." By analyzing linguistic patterns, sentiment, and specificity, we provide a composite risk score to help consumers identify potential greenwashing.</p>
+                    
+                    <h3>Objectives</h3>
+                    <p>1. Detect unverified environmental claims in real-time.</p>
+                    <p>2. Provide transparency in sustainability marketing.</p>
+                    <p>3. Distinguish between emotional marketing and factual reporting.</p>
+                </div>
+            )}
         </div>
     );
 }

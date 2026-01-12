@@ -15,11 +15,14 @@ class GreenwashingAnalyzer:
         self.model.eval()
 
         # Sentiment model
+    
         self.sentiment_analyzer = pipeline(
             "sentiment-analysis",
             model="nlptown/bert-base-multilingual-uncased-sentiment",
             device=0 if self.device.type != "cpu" else -1
         )
+    
+        
 
         # Buzzwords + weights
         self.buzzwords = {
@@ -94,7 +97,7 @@ class GreenwashingAnalyzer:
         return min(weight, 2.0)
 
     # ---------- Main composite analysis ----------
-    def analyze(self, text):
+    def analyze(self, text, threshold = 0.3):
         sentences = self.split_sentences(text)
 
         specificity = self.predict_specificity(sentences)
@@ -103,7 +106,7 @@ class GreenwashingAnalyzer:
 
         risk_score = (1-specificity) * sentiment * buzz_weight
 
-        label = "greenwashing" if risk_score >= 0.4 else "not_greenwashing"
+        label = "greenwashing" if risk_score >= threshold else "not_greenwashing"
 
         return {
             "risk_score": round(risk_score, 3),
@@ -113,7 +116,7 @@ class GreenwashingAnalyzer:
             "buzzword_weight": round(buzz_weight, 2)
         }
         # ---------- Alternative composite analysis (Additive risk) ----------
-    def analyze_additive(self, text, alpha=0.5, beta=0.3, gamma=0.2):
+    def analyze_additive(self, text, alpha=0.5, beta=0.3, gamma=0.2, threshold = 0.5):
         """
         Alternative risk formulation using additive weighted components.
         """
@@ -135,7 +138,7 @@ class GreenwashingAnalyzer:
 
         risk_score = min(max(risk_score, 0.0), 1.0)
 
-        label = "greenwashing" if risk_score >= 0.5 else "not_greenwashing"
+        label = "greenwashing" if risk_score >= threshold else "not_greenwashing"
 
         return {
             "risk_score": round(risk_score, 3),
@@ -152,7 +155,7 @@ class GreenwashingAnalyzer:
         specificity = self.predict_specificity(sentences)
         specificity_score = 1 - specificity
 
-        label = "greenwashing" if specificity_score >= 0.4 else "not_greenwashing"
+        label = "greenwashing" if specificity_score >= 0.5 else "not_greenwashing"
 
         return {
             "specificity_score": round(specificity_score, 3),

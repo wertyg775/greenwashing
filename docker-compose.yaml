@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  # Redis service - runs in its own container
+  redis:
+    image: redis:7-alpine
+    container_name: greenwash_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Your app - BUILDS from your Dockerfile
+  app:
+    build: .  # This uses your Dockerfile to build the image
+    container_name: greenwash_app
+    ports:
+      - "8000:8000"
+    environment:
+      # Pass Redis URL to connect to the redis container above
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      # Optional: mount for live code editing during development
+      - ./frontend:/app/frontend
+
+# Persistent storage for Redis data
+volumes:
+  redis_data:
