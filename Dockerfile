@@ -18,7 +18,7 @@ FROM python:3.10-slim
 # Set environment variables for Python and Transformers
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    TRANSFORMERS_CACHE=/tmp/.cache 
+    TRANSFORMERS_CACHE=/tmp/.cache
 
 WORKDIR /app
 
@@ -32,6 +32,9 @@ COPY --from=builder /install /usr/local
 
 # Copy the large model first (to utilize layer caching)
 COPY --chown=user:user ./models ./models
+
+# Copy comparison images
+COPY --chown=user:user ./image/comparison ./image/comparison
 
 # Copy code and frontend
 COPY --chown=user:user app.py greenwashing_analyzer.py ./ 
