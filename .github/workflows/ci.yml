@@ -1,0 +1,14 @@
+- name: Create dummy directories for app mounting
+        run: |
+          mkdir -p frontend
+          mkdir -p image/comparison
+          # Create a blank index.html so the mount doesn't fail
+          touch frontend/index.html 
+          # Create a dummy image so the test has something to find
+          touch image/comparison/zero-shot_cm.png
+
+      - name: Run Tests
+        env:
+          REDIS_URL: redis://localhost:6379
+        run: |
+          python -m pytest tests/

@@ -221,4 +221,13 @@ async def shutdown_event():
     except Exception as e:
         print(f"Error closing Redis: {e}")
 
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+# 1. MOUNT SPECIFIC PATHS FIRST
+if os.path.exists("image"):
+    print("✓ Image folder found, mounting /image")
+    app.mount("/image", StaticFiles(directory="image"), name="image")
+else:
+    print("X Image folder NOT found")
+
+# 2. MOUNT THE ROOT LAST (The "catch-all")
+if os.path.exists("frontend"):
+    app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

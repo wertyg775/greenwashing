@@ -34,7 +34,8 @@ COPY --from=builder /install /usr/local
 COPY --chown=user:user ./models ./models
 
 # Copy comparison images
-COPY --chown=user:user ./image/comparison ./image/comparison
+# Copy the entire image directory
+COPY --chown=user:user ./image ./image
 
 # Copy code and frontend
 COPY --chown=user:user app.py greenwashing_analyzer.py ./ 
