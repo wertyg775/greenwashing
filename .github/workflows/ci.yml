@@ -1,12 +1,37 @@
-- name: Create dummy directories for app mounting
+name: CI Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+      
+      - name: Create dummy directories for app mounting
         run: |
           mkdir -p frontend
           mkdir -p image/comparison
-          # Create a blank index.html so the mount doesn't fail
           touch frontend/index.html 
-          # Create a dummy image so the test has something to find
           touch image/comparison/zero-shot_cm.png
-
+      
       - name: Run Tests
         env:
           REDIS_URL: redis://localhost:6379
